@@ -1,13 +1,17 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Spawner แบบทางวิ่งต่อชิ้น รองรับเลี้ยว (socket), กันซ้อนทับด้วย Grid Guard (ไม่ใช้ฟิสิกส์),
+/// มีงบสปอว์นต่อเฟรมกันค้าง, เลือกโอกาสเลี้ยว และกันเลี้ยวติดกัน
+/// </summary>
 public class TileSpawner : MonoBehaviour
 {
     [Header("Player & Prefabs")]
     public Transform player;
     public GameObject[] tilePrefabs;
 
-    [Header("Straight Mode (fallback)")]
+    [Header("Straight Fallback")]
     public float tileLength = 10f;
     public int tilesAhead = 8;
     public int safeStartCount = 3;
@@ -20,24 +24,30 @@ public class TileSpawner : MonoBehaviour
 
     [Header("Turn Settings")]
     public bool allowTurns = true;
-    [Range(0f, 1f)] public float turnChance = 0.25f;  // โอกาสสุ่มทางเลี้ยว
-    public bool preventConsecutiveTurns = true;       // กันเลี้ยวติดกัน
+    [Range(0f, 1f)] public float turnChance = 0.25f;     // โอกาสสุ่มออกทางเลี้ยว
+    public bool preventConsecutiveTurns = true;          // กันทางเลี้ยวติดกัน
 
     [Header("Anchor (turned mode)")]
-    public Transform anchor;
+    public Transform anchor;                              // ให้ entrySocket ของชิ้นใหม่มาทับอันนี้
 
-    [Header("Anti-Overlap (OverlapBox)")]
-    [Tooltip("เลือกให้ครอบเลเยอร์ TileFootprint เท่านั้น")]
-    public LayerMask footprintMask;
-    [Tooltip("จำนวนครั้งที่ลองสุ่มใหม่เมื่อทับกัน")]
-    public int placeRetry = 8;
-    [Tooltip("ถ้าทับกันแล้วไม่มีตัวเลือก ให้ข้ามการวางในรอบนั้นแทนการบังคับยัด")]
-    public bool skipIfOverlap = true;
-    [Tooltip("ตอนรีไซเคิล: ถ้าทับจะ 'ทำลายชิ้นเก่าและสร้างชิ้นใหม่' แทนการฝืนย้าย")]
-    public bool replaceOnRecycleIfOverlap = true;
+    // ---------- Grid Guard (No-Physics) ----------
+    [Header("Grid Guard (No-Overlap, No-Physics)")]
+    public bool useGridGuard = true;
+    [Tooltip("ขนาด 1 เซลล์กริด (ตั้ง ~ เท่าความยาวไทล์มาตรฐาน)")]
+    public float cellSize = 10f;
+    [Tooltip("จำนวนเซลล์ตามยาวที่ 1 ไทล์กิน (ไทล์ยาวสองเท้าใส่ 2)")]
+    public int forwardCellsPerTile = 1;
 
-    // ===== internal =====
-    private readonly List<GameObject> activeTiles = new List<GameObject>();
+    // เก็บการจองเซลล์ของแต่ละไทล์ เพื่อคืน/ย้ายตอนรีไซเคิล
+    private readonly Dictionary<GameObject, List<Vector3Int>> reservations = new();
+    private readonly HashSet<Vector3Int> occupied = new();
+
+    [Header("Spawn Budget")]
+    [Tooltip("จำกัดจำนวนสปอว์น/รีไซเคิลต่อ 1 เฟรม เพื่อลดโอกาสค้าง")]
+    public int maxSpawnsPerFrame = 2;
+
+    // ---------- internal ----------
+    private readonly List<GameObject> activeTiles = new();
     private float nextZ;
     private bool usingTurnMode = false;
     private bool lastWasTurn = false;
@@ -68,10 +78,15 @@ public class TileSpawner : MonoBehaviour
 
     void Update()
     {
+        int budget = Mathf.Max(1, maxSpawnsPerFrame);
+
         if (!usingTurnMode)
         {
-            while (player.position.z + tilesAhead * tileLength > nextZ - tileLength)
+            while (budget > 0 && player.position.z + tilesAhead * tileLength > nextZ - tileLength)
+            {
                 SpawnStraight(false);
+                budget--;
+            }
 
             if (activeTiles.Count > 0)
             {
@@ -82,8 +97,11 @@ public class TileSpawner : MonoBehaviour
         }
         else
         {
-            while (activeTiles.Count < tilesAhead + 2)
-                SpawnByAnchor(false);
+            while (budget > 0 && activeTiles.Count < tilesAhead + 2)
+            {
+                if (!SpawnByAnchor(false)) break; // ถ้าเฟรมนี้ลงไม่ได้ ให้หยุด—ไม่ลูป
+                budget--;
+            }
 
             if (activeTiles.Count > 0)
             {
@@ -94,13 +112,13 @@ public class TileSpawner : MonoBehaviour
         }
     }
 
-    // ===== Straight mode (legacy fallback) =====
+    // =================== Straight mode (เดิม) ===================
     private void SpawnStraight(bool safe)
     {
         GameObject prefab = tilePrefabs[Random.Range(0, tilePrefabs.Length)];
         GameObject tile = Instantiate(prefab, new Vector3(0f, 0f, nextZ), Quaternion.identity, transform);
         var tileComp = tile.GetComponent<Tile>();
-        if (tileComp) tileComp.RefreshContents(this, safe);
+        tileComp?.RefreshContents(this, safe);
         activeTiles.Add(tile);
         nextZ += tileLength;
     }
@@ -111,68 +129,66 @@ public class TileSpawner : MonoBehaviour
         activeTiles.RemoveAt(0);
         oldest.transform.position = new Vector3(0f, 0f, nextZ);
         var tileComp = oldest.GetComponent<Tile>();
-        if (tileComp) tileComp.RefreshContents(this, false);
+        tileComp?.RefreshContents(this, false);
         activeTiles.Add(oldest);
         nextZ += tileLength;
     }
 
-    // ===== Turned mode (with anti-overlap) =====
-    private void SpawnByAnchor(bool safe)
+    // =================== Turned mode + Grid Guard ===================
+    /// <summary>สปอว์นชิ้นใหม่ด้านหน้า (คืนค่า false = เฟรมนี้ไม่มีที่ลง/ข้าม)</summary>
+    private bool SpawnByAnchor(bool safe)
     {
-        for (int attempt = 0; attempt < Mathf.Max(1, placeRetry); attempt++)
+        var prefab = ChooseTilePrefab();
+
+        // คำนวณโพสที่ควรจะวาง
+        var ghost = Instantiate(prefab);
+        ghost.SetActive(false);
+        Pose p = ComputePoseFor(ghost);
+
+        var t = ghost.GetComponent<Tile>();
+
+        // ประกาศ cells ให้ชัดเจนกัน CS0165
+        List<Vector3Int> cells = null;
+
+        // ถ้าเปิด GridGuard: ต้องจองเซลล์ให้ได้ก่อน
+        if (useGridGuard && !TryReserveCells(t, p, out cells))
         {
-            var prefab = ChooseTilePrefab();
-            var ghost = Instantiate(prefab);
-            ghost.SetActive(false);
-
-            // คำนวณ pose ที่จะวาง (แต่ยังไม่วางจริง)
-            Pose targetPose = ComputePoseFor(ghost);
-
-            var t = ghost.GetComponent<Tile>();
-            bool ok = CanPlaceTileAtPose(t, targetPose.position, targetPose.rotation);
-
-            if (ok)
-            {
-                // วางจริง
-                ghost.transform.SetPositionAndRotation(targetPose.position, targetPose.rotation);
-                ghost.SetActive(true);
-
-                if (t) t.RefreshContents(this, safe);
-                activeTiles.Add(ghost);
-                AdvanceAnchor(t);
-                lastWasTurn = (t && (t.turnKind == TurnKind.Left90 || t.turnKind == TurnKind.Right90));
-                return;
-            }
-
-            // ไม่ผ่าน → ทำลายตัวทดลอง
-            Destroy(ghost);
-        }
-
-        if (!skipIfOverlap)
-        {
-            // fallback: บังคับวางตรง (โอกาสผ่านสูงกว่า)
+            // ลองบังคับเป็นตรง 1 ครั้ง (ผ่านง่ายกว่า)
             var straight = PickStraightOnly();
-            if (straight)
+            if (straight != null)
             {
-                var go = Instantiate(straight);
-                go.SetActive(false);
-                Pose p = ComputePoseFor(go, forceStraight: true);
-                var tt = go.GetComponent<Tile>();
-                if (CanPlaceTileAtPose(tt, p.position, p.rotation))
+                Destroy(ghost);
+                ghost = Instantiate(straight);
+                ghost.SetActive(false);
+                p = ComputePoseFor(ghost, forceStraight: true);
+                t = ghost.GetComponent<Tile>();
+
+                cells = null; // รีเซ็ตก่อนจองใหม่
+                if (useGridGuard && !TryReserveCells(t, p, out cells))
                 {
-                    go.transform.SetPositionAndRotation(p.position, p.rotation);
-                    go.SetActive(true);
-                    if (tt) tt.RefreshContents(this, safe);
-                    activeTiles.Add(go);
-                    AdvanceAnchor(tt);
-                    lastWasTurn = false;
-                    return;
+                    Destroy(ghost);
+                    return false; // ไม่มีที่ลง → ข้ามในเฟรมนี้ (กันค้าง)
                 }
-                Destroy(go);
+                lastWasTurn = false;
+            }
+            else
+            {
+                Destroy(ghost);
+                return false;
             }
         }
 
-        Debug.LogWarning("[TileSpawner] SpawnByAnchor: cannot find non-overlapping placement.");
+        // วางจริง
+        ghost.transform.SetPositionAndRotation(p.position, p.rotation);
+        ghost.SetActive(true);
+        t?.RefreshContents(this, safe);
+        activeTiles.Add(ghost);
+        AdvanceAnchor(t);
+
+        if (useGridGuard && cells != null)
+            reservations[ghost] = cells;
+
+        return true;
     }
 
     private void RecycleByAnchor()
@@ -180,45 +196,50 @@ public class TileSpawner : MonoBehaviour
         var oldest = activeTiles[0];
         activeTiles.RemoveAt(0);
 
-        // คำนวณ pose ใหม่ให้กับ 'oldest'
+        // คืนเซลล์เดิมแบบปลอดภัย
+        if (useGridGuard && reservations.TryGetValue(oldest, out var cellsOld))
+        {
+            foreach (var c in cellsOld) occupied.Remove(c);
+            reservations.Remove(oldest);
+        }
+
         Pose p = ComputePoseFor(oldest);
         var t = oldest.GetComponent<Tile>();
 
-        if (CanPlaceTileAtPose(t, p.position, p.rotation))
+        // จองเซลล์ใหม่ให้สำเร็จก่อนค่อยย้าย
+        List<Vector3Int> cellsNew = null;
+        bool ok = !useGridGuard || TryReserveCells(t, p, out cellsNew);
+
+        if (ok)
         {
             oldest.transform.SetPositionAndRotation(p.position, p.rotation);
             t?.RefreshContents(this, false);
             activeTiles.Add(oldest);
             AdvanceAnchor(t);
-            lastWasTurn = t && (t.turnKind == TurnKind.Left90 || t.turnKind == TurnKind.Right90);
+
+            if (useGridGuard && cellsNew != null)
+                reservations[oldest] = cellsNew;
+
+            return;
         }
-        else if (replaceOnRecycleIfOverlap)
-        {
-            // ทำลายชิ้นเก่า แล้วหาชิ้นใหม่แทน (ใช้ตรรกะเดียวกับ SpawnByAnchor)
-            Destroy(oldest);
-            SpawnByAnchor(false);
-        }
-        else
-        {
-            // ถ้าไม่ให้ทำลาย ก็พยายามดันไปข้างหน้าตามแกน anchor แบบเดิม (เสี่ยงชน)
-            oldest.transform.SetPositionAndRotation(anchor.position, anchor.rotation);
-            t?.RefreshContents(this, false);
-            activeTiles.Add(oldest);
-            AdvanceAnchor(t);
-        }
+
+        // ถ้าย้ายไม่ได้จริง ๆ → ทำลายแล้วสปอว์นใหม่แทน (เฟรมถัดไปจะลองต่อ)
+        Destroy(oldest);
+        SpawnByAnchor(false);
     }
 
-    // ====== เลือก Prefab: ตรง/เลี้ยว + กันเลี้ยวติดกัน ======
+    // =================== เลือก Prefab ===================
     private GameObject ChooseTilePrefab()
     {
         bool wantTurn = allowTurns && Random.value < turnChance;
         if (preventConsecutiveTurns && lastWasTurn) wantTurn = false;
 
-        List<GameObject> list = new List<GameObject>();
+        List<GameObject> list = new();
         foreach (var pf in tilePrefabs)
         {
             var t = pf.GetComponent<Tile>();
             if (!t) continue;
+
             if (wantTurn)
             {
                 if (t.turnKind == TurnKind.Left90 || t.turnKind == TurnKind.Right90) list.Add(pf);
@@ -228,6 +249,7 @@ public class TileSpawner : MonoBehaviour
                 if (t.turnKind == TurnKind.Straight) list.Add(pf);
             }
         }
+
         if (list.Count == 0) list.AddRange(tilePrefabs); // fallback
 
         var chosen = list[Random.Range(0, list.Count)];
@@ -238,7 +260,7 @@ public class TileSpawner : MonoBehaviour
 
     private GameObject PickStraightOnly()
     {
-        List<GameObject> list = new List<GameObject>();
+        List<GameObject> list = new();
         foreach (var pf in tilePrefabs)
         {
             var tt = pf.GetComponent<Tile>();
@@ -247,7 +269,7 @@ public class TileSpawner : MonoBehaviour
         return list.Count > 0 ? list[Random.Range(0, list.Count)] : null;
     }
 
-    // ====== คำนวณ Pose ที่จะวาง (เหมือน Align แต่ไม่แตะ transform จริง) ======
+    // =================== คำนวณ Pose (เหมือน Align แต่ไม่แตะ Transform จริง) ===================
     private Pose ComputePoseFor(GameObject go, bool forceStraight = false)
     {
         var t = go.GetComponent<Tile>();
@@ -256,16 +278,17 @@ public class TileSpawner : MonoBehaviour
 
         if (t && (t.HasSocketsStraight() || t.HasSocketsSplit()) && !forceStraight)
         {
+            // ให้ entrySocket ซ้อน anchor ทั้งหมุนและตำแหน่ง
             var entry = t.entrySocket;
             Quaternion rotDelta = anchor.rotation * Quaternion.Inverse(entry.rotation);
             rot = rotDelta * rot;
 
-            // worldPos = anchor.pos - (rot * (entry.localOffsetFromRoot))
-            Vector3 localOffset = entry.position - go.transform.position;
+            Vector3 localOffset = entry.position - go.transform.position; // world offset ก่อนหมุนใหม่
             pos = anchor.position - (rot * localOffset);
         }
         else
         {
+            // โหมดตรง (fallback)
             rot = anchor.rotation;
             pos = anchor.position + anchor.forward * (tileLength * 0.5f);
         }
@@ -273,32 +296,39 @@ public class TileSpawner : MonoBehaviour
         return new Pose(pos, rot);
     }
 
-    // ====== ตรวจชนด้วย OverlapBox ======
-    private bool CanPlaceTileAtPose(Tile t, Vector3 worldPos, Quaternion worldRot)
+    // =================== Grid Guard ===================
+    /// <summary>พยายามจองเซลล์สำหรับไทล์ ณ โพสที่กำหนด (สำเร็จ = true)</summary>
+    private bool TryReserveCells(Tile t, Pose p, out List<Vector3Int> cells)
     {
-        if (t == null || t.footprint == null) return true; // ไม่มีกล่อง → ปล่อยผ่าน (แนะนำใส่ทุกอัน)
+        cells = new List<Vector3Int>();
+        if (!useGridGuard) return true;
 
-        // คำนวณ center ใน world: center_world = pos + rot * local_center
-        Vector3 centerWorld = worldPos + worldRot * t.footprint.center;
+        Vector3 origin = p.position;
+        Vector3 forward = (p.rotation * Vector3.forward).normalized;
 
-        // half extents ตามขนาดกล่อง (รองรับสเกลโลกของ Tile)
-        // ถ้า Tile/Root สเกล 1,1,1 ใช้ size*0.5 ก็พอ
-        Vector3 halfExtents = t.footprint.size * 0.5f;
-
-        // หา collider ที่ทับ (นับรวม trigger เพราะ footprint เป็น trigger)
-        Collider[] hits = Physics.OverlapBox(centerWorld, halfExtents, worldRot, footprintMask, QueryTriggerInteraction.Collide);
-
-        foreach (var h in hits)
+        int steps = Mathf.Max(1, forwardCellsPerTile);
+        for (int i = 0; i < steps; i++)
         {
-            // อนุญาตชนกับตัวเองเฉพาะกรณีที่เป็น 'go' เดียวกัน (ตอนที่วางจริง ๆ จะไม่มีกรณีนี้ เพราะเราเช็คก่อน SetActive)
-            // แต่กันเคสชนกับชิ้นอื่นทั้งหมด
-            if (t.footprint != null && h == t.footprint) continue;
-            return false;
+            // ใช้ 0.9f กันกรณีอยู่บนรอยต่อ cell พอดี
+            Vector3 sample = origin + forward * (i * cellSize * 0.9f);
+            var c = CellOf(sample);
+            if (occupied.Contains(c)) return false;
+            cells.Add(c);
         }
+
+        foreach (var c in cells) occupied.Add(c);
         return true;
     }
 
-    // ====== ย้าย Anchor ไป exit ของชิ้นที่วาง ======
+    private Vector3Int CellOf(Vector3 worldPos)
+    {
+        int cx = Mathf.RoundToInt(worldPos.x / cellSize);
+        int cy = Mathf.RoundToInt(worldPos.y / cellSize); // ปกติ y ~ 0
+        int cz = Mathf.RoundToInt(worldPos.z / cellSize);
+        return new Vector3Int(cx, cy, cz);
+    }
+
+    // =================== Anchor ต่อเส้น ===================
     private void AdvanceAnchor(Tile tile)
     {
         if (!tile)
@@ -309,7 +339,7 @@ public class TileSpawner : MonoBehaviour
 
         if (tile.HasSocketsSplit())
         {
-            // ถ้ามีระบบ auto-choose split ให้เลือกที่นี่ (มีแต่ละโปรเจกต์เลือกเปิด-ปิด)
+            // ถ้าใช้ระบบเลือกซ้าย/ขวาแบบอัตโนมัติ ให้ใส่ที่นี่ (เวอร์ชันนี้รอ Trigger)
             return;
         }
 
@@ -332,7 +362,7 @@ public class TileSpawner : MonoBehaviour
         return false;
     }
 
-    // ===== API เดิม =====
+    // =================== API เดิม (Obstacle/Coin/Split) ===================
     public bool TrySpawnObstacle(Transform parent, Transform[] lanePoints)
     {
         if (obstaclePrefabs == null || obstaclePrefabs.Length == 0) return false;
@@ -356,7 +386,6 @@ public class TileSpawner : MonoBehaviour
         return true;
     }
 
-    // ถ้าคุณใช้ SplitChoiceTrigger เรียกอันนี้
     public void ChooseSplitExit(Tile splitTile, bool chooseLeft)
     {
         if (splitTile == null) return;
