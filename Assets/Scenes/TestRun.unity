@@ -154,7 +154,7 @@ MonoBehaviour:
   - {fileID: 8287155024953990744, guid: 9fbbd82c327225e439dba70d082f5235, type: 3}
   - {fileID: 693237429605523602, guid: 9c25da9883f1d1248b09dccc45373456, type: 3}
   tileLength: 15
-  tilesAhead: 50
+  tilesAhead: 80
   safeStartCount: 3
   obstaclePrefabs:
   - {fileID: 3535362243705354294, guid: 655a77eecd4fad34c901596d6325f39a, type: 3}
