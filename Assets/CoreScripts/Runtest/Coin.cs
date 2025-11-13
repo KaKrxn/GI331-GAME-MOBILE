@@ -1,15 +1,33 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class Coin : MonoBehaviour
 {
-    public int value = 1;
+    [SerializeField] string playerTag = "Player";
+    [SerializeField] int amount = 1;
+
+    void Reset()
+    {
+        var c = GetComponent<Collider>();
+        if (c) c.isTrigger = true;     // เหรียญควรเป็น Trigger
+    }
+
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag(playerTag)) return;
+
+        var wallet = other.GetComponent<PlayerWallet>();
+        if (wallet != null)
         {
-            ScoreManager.Instance.AddCoins(value);
-            Destroy(gameObject);
+            wallet.AddCoin(amount);
         }
+        else
+        {
+            // ทางเลือก: ถ้าคุณมี GameManager แบบซิงเกิลตัน ให้ลองเรียกตรงนี้แทน
+            // GameManager.Instance?.AddCoins(amount);
+            Debug.LogWarning("Player ไม่มี PlayerWallet จึงไม่ได้บวกเหรียญ");
+        }
+
+        Destroy(gameObject);
     }
 }
