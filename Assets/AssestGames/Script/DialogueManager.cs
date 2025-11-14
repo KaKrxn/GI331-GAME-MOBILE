@@ -2,19 +2,21 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using System.Collections.Generic;
 
 public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance;
 
     [SerializeField] private GameObject dialoguePanel;
-    [SerializeField] private TMP_Text npcNameText;
+    [SerializeField] private TMP_Text characterNameText;
     [SerializeField] private TMP_Text dialogueText;
-    [SerializeField] private Image portraitImage;
+    [SerializeField] private Image playerPortrait;
+    [SerializeField] private Image npcPortrait;
     [SerializeField] private Button nextButton;
     [SerializeField] private float typingSpeed = 0.03f;
 
-    private string[] lines;
+    private List<NPCInteractable.DialogueLine> lines;
     private int index;
     private bool isTyping;
 
@@ -29,18 +31,41 @@ public class DialogueManager : MonoBehaviour
     {
         lines = npc.dialogueLines;
         index = 0;
-        npcNameText.text = npc.npcName;
-        portraitImage.sprite = npc.portrait;
         dialoguePanel.SetActive(true);
         StopAllCoroutines();
-        StartCoroutine(TypeLine());
+        ShowCurrentLine();
     }
 
-    IEnumerator TypeLine()
+    void ShowCurrentLine()
+    {
+        var line = lines[index];
+        dialogueText.text = "";
+        StopAllCoroutines();
+        StartCoroutine(TypeLine(line.text));
+
+        if(line.isPlayer)
+        {
+            playerPortrait.sprite = line.portrait;
+            playerPortrait.gameObject.SetActive(true);
+            npcPortrait.gameObject.SetActive(false);
+        }
+        else
+        {
+            npcPortrait.sprite = line.portrait;
+            npcPortrait.gameObject.SetActive(true);
+            playerPortrait.gameObject.SetActive(false);
+        }
+
+        characterNameText.text = line.characterName;
+    }
+
+
+
+    IEnumerator TypeLine(string text)
     {
         isTyping = true;
         dialogueText.text = "";
-        foreach (char c in lines[index].ToCharArray())
+        foreach (char c in text.ToCharArray())
         {
             dialogueText.text += c;
             yield return new WaitForSeconds(typingSpeed);
@@ -53,16 +78,15 @@ public class DialogueManager : MonoBehaviour
         if (isTyping)
         {
             StopAllCoroutines();
-            dialogueText.text = lines[index];
+            dialogueText.text = lines[index].text;
             isTyping = false;
             return;
         }
 
-        if (index < lines.Length - 1)
+        if (index < lines.Count - 1)
         {
             index++;
-            StopAllCoroutines();
-            StartCoroutine(TypeLine());
+            ShowCurrentLine();
         }
         else
         {

@@ -21,8 +21,12 @@ public class ExPlayerController : MonoBehaviour
         transform.position += move * moveSpeed * Time.deltaTime;
 
         if (move.x > 0)
-            spriteRenderer.flipX = false;
-        else if (move.x < 0)
+        {
             spriteRenderer.flipX = true;
+        }
+        else if (move.x < 0)
+        {
+            spriteRenderer.flipX = false;
+        }
     }
 }
