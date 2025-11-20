@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class ExPlayerInteract : MonoBehaviour
 {
     private NPCInteractable currentNPC;
+    private ShopInteractable currentShop;
     private PlayerInput playerInput;
     private InputAction interactAction;
     [SerializeField] private GameObject interactButton;
@@ -23,9 +24,16 @@ public class ExPlayerInteract : MonoBehaviour
 
     void Update()
     {
-        if (interactAction.WasPerformedThisFrame() && currentNPC != null)
+        if (interactAction.WasPerformedThisFrame())
         {
-            currentNPC.TriggerDialogue();
+            if (currentNPC != null)
+            {
+                currentNPC.TriggerDialogue();
+            }
+            else if (currentShop != null)
+            {
+                currentShop.TriggerShop();
+            }
         }
     }
 
@@ -35,14 +43,25 @@ public class ExPlayerInteract : MonoBehaviour
         {
             currentNPC.TriggerDialogue();
         }
+        else if (currentShop != null)
+        {
+            currentShop.TriggerShop();
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log("ชนกับ " + other.name);
         if (other.GetComponent<NPCInteractable>() != null)
         {
             currentNPC = other.GetComponent<NPCInteractable>();
+            currentShop = null;
+            if (interactButton != null)
+                interactButton.SetActive(true);
+        }
+        else if (other.GetComponent<ShopInteractable>() != null)
+        {
+            currentShop = other.GetComponent<ShopInteractable>();
+            currentNPC = null;
             if (interactButton != null)
                 interactButton.SetActive(true);
         }
@@ -53,7 +72,13 @@ public class ExPlayerInteract : MonoBehaviour
         if (other.GetComponent<NPCInteractable>() == currentNPC)
         {
             currentNPC = null;
-            if (interactButton != null)
+            if (currentShop == null && interactButton != null)
+                interactButton.SetActive(false);
+        }
+        else if (other.GetComponent<ShopInteractable>() == currentShop)
+        {
+            currentShop = null;
+            if (currentNPC == null && interactButton != null)
                 interactButton.SetActive(false);
         }
     }

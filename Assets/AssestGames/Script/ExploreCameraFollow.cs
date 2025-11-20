@@ -9,7 +9,13 @@ public class ExploreCameraFollow : MonoBehaviour
     void LateUpdate()
     {
         if (!target) return;
-        Vector3 desiredPosition = new Vector3(target.position.x + offset.x, transform.position.y, target.position.z + offset.z);
+
+        Vector3 desiredPosition = new Vector3(
+            target.position.x + offset.x,
+            target.position.y + offset.y,
+            offset.z
+        );
+
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
     }
 }
