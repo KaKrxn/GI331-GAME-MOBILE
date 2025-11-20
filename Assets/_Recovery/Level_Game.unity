@@ -156,13 +156,13 @@ MonoBehaviour:
   - {fileID: 4296845917510203146, guid: 44ad025ae4a755f4bbe74b7af1a81ad5, type: 3}
   - {fileID: 4296845917510203146, guid: a40cbf92b14b9674aa911bed7e611119, type: 3}
   tileSpawnWeights:
-  - 80
-  - 35
-  - 35
+  - 90
+  - 1
+  - 1
   - 0.8
   - 0.8
   tileLength: 500
-  tilesAhead: 50
+  tilesAhead: 100
   safeStartCount: 3
   obstaclePrefabs:
   - {fileID: 3535362243705354294, guid: 655a77eecd4fad34c901596d6325f39a, type: 3}
@@ -176,12 +176,12 @@ MonoBehaviour:
   preventConsecutiveTurns: 1
   anchor: {fileID: 1187363877}
   useGridGuard: 1
-  cellSize: 8
+  cellSize: 5
   forwardCellsPerTile: 1
-  maxSpawnsPerFrame: 2
+  maxSpawnsPerFrame: 1
   useFiniteTrack: 1
-  maxRegularTiles: 500
-  endTilePrefab: {fileID: 0}
+  maxRegularTiles: 100
+  endTilePrefab: {fileID: 4296845917510203146, guid: 0d60221c5f434d34c9d4f0c0bdeeba61, type: 3}
 --- !u!4 &140110842
 Transform:
   m_ObjectHideFlags: 0
@@ -783,7 +783,7 @@ MonoBehaviour:
   currentLane: 1
   laneSmoothTime: 0.08
   maxLateralSpeed: 25
-  jumpForce: 8
+  jumpForce: 10
   gravity: -25
   slideDuration: 0.6
   slideHeight: 1
@@ -905,8 +905,8 @@ Transform:
   m_GameObject: {fileID: 1754128711}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 1.37, z: 0}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1530169302}
