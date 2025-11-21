@@ -7,6 +7,9 @@ public class NPCQuestUI : MonoBehaviour
     [Header("Quest Items สำหรับ NPC ตัวนี้")]
     [SerializeField] private List<ItemDefinition> requiredQuestItems = new List<ItemDefinition>();
 
+    [Header("ถ้าเก็บครบทุกชิ้นแล้วให้เปิด GameObject นี้")]
+    [SerializeField] private GameObject objectToActivateWhenQuestComplete;
+
     [Header("UI Roots")]
     [SerializeField] private GameObject interactionPanelRoot; // NPC_Panel_Interaction
     [SerializeField] private GameObject questWindowRoot;      // หน้าต่างที่แสดง Items
@@ -40,6 +43,10 @@ public class NPCQuestUI : MonoBehaviour
 
         if (interactionPanelRoot) interactionPanelRoot.SetActive(false);
         if (questWindowRoot) questWindowRoot.SetActive(false);
+
+        // แนะนำให้ปิดไว้ก่อนตอนเริ่มเกม
+        if (objectToActivateWhenQuestComplete != null)
+            objectToActivateWhenQuestComplete.SetActive(false);
     }
 
     private void Start()
@@ -100,8 +107,6 @@ public class NPCQuestUI : MonoBehaviour
         isAnyUIOpen = true;
     }
 
-    
-
     private void OnTalkButtonClicked()
     {
         if (npcInteractable != null)
@@ -131,7 +136,7 @@ public class NPCQuestUI : MonoBehaviour
         isAnyUIOpen = false;
     }
 
-    // ---------- สร้างรายการ Items เควสต์ ----------
+    // ---------- สร้างรายการ Items เควสต์ + เช็คว่าครบหรือยัง ----------
 
     private void RefreshQuestListUI()
     {
@@ -147,6 +152,8 @@ public class NPCQuestUI : MonoBehaviour
         GameData gameData = GameData.Instance;
         bool hasGameData = (gameData != null);
 
+        bool allCollected = true;   // สมมติว่าเก็บครบก่อน แล้วค่อยเช็คทีละอัน
+
         foreach (var def in requiredQuestItems)
         {
             if (def == null) continue;
@@ -160,10 +167,20 @@ public class NPCQuestUI : MonoBehaviour
                 hasItem = gameData.HasItem(def.itemId);
             }
 
+            // ถ้าชิ้นไหนยังไม่ครบ → เควสต์ยังไม่ complete
+            if (!hasItem)
+                allCollected = false;
+
             if (rowUI != null)
             {
                 rowUI.Setup(def, hasItem);
             }
+        }
+
+        // ถ้าเก็บครบทุกชิ้นแล้ว ให้เปิด GameObject ที่ตั้งไว้
+        if (objectToActivateWhenQuestComplete != null)
+        {
+            objectToActivateWhenQuestComplete.SetActive(allCollected);
         }
     }
 
