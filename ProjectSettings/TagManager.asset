@@ -19,10 +19,10 @@ TagManager:
   - 
   - Ground
   - TileFootprint
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - Obstacle
+  - Turn
+  - Tile
   - 
   - 
   - 

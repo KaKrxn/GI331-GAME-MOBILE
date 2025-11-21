@@ -2513,7 +2513,7 @@ MonoBehaviour:
   progressSlider: {fileID: 1713135172284760162}
   loadDelay: 3
   loadMode: 0
-  sceneName: Level_Lobby
+  sceneName: ExploreMode
   buildIndex: 1
 --- !u!1 &7638841062290333239
 GameObject:

@@ -31,12 +31,12 @@ public class QuestItemRowUI : MonoBehaviour
         {
             if (hasItem)
             {
-                statusText.text = "เก็บแล้ว";
+                statusText.text = "Success!";
                 statusText.color = Color.green;
             }
             else
             {
-                statusText.text = "ยังไม่ได้เก็บ";
+                statusText.text = "Null!";
                 statusText.color = Color.red;
             }
         }
