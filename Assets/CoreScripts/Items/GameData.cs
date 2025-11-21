@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿#if UNITY_EDITOR
+using UnityEditor;
+#endif
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameData : MonoBehaviour
@@ -216,17 +219,31 @@ public class GameData : MonoBehaviour
         RefreshInventoryDebugList();
     }
 
+    [ContextMenu("Reset Game Data (Clear Save)")]
     public void ResetGameData()
     {
+        // รีเซ็ตค่าที่เก็บไว้ใน GameData (runtime)
         coins = 0;
         collectedItemIds.Clear();
         collectedItemIdsDebug.Clear();
         inventoryQuantities.Clear();
         inventoryDebug.Clear();
 
+        // ลบข้อมูลที่เคยเซฟไว้ใน PlayerPrefs ทั้งหมดของ GameData
         PlayerPrefs.DeleteKey(CoinsKey);
         PlayerPrefs.DeleteKey(CollectedKey);
         PlayerPrefs.DeleteKey(InventoryKey);
         PlayerPrefs.Save();
+
+#if UNITY_EDITOR
+        // ให้ Unity มองว่าคอมโพเนนต์นี้ถูกแก้ (ใช้เวลาไม่ได้กด Play)
+        EditorUtility.SetDirty(this);
+#endif
+
+        Debug.Log("[GameData] Reset Game Data from Inspector (runtime + PlayerPrefs cleared)");
     }
+
+
+
+
 }

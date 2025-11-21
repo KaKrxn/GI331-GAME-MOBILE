@@ -14,14 +14,22 @@ namespace TempleRun
     {
         [SerializeField, Tooltip("How many straight tiles to spawn at the beginning.")]
         private int tileStartCount = 10;
+
+        [SerializeField, Tooltip("The prefab for the very first straight tiles (used only for the initial path).")]
+        private GameObject initialStartingTile;          // ⬅ ใช้สำหรับช่วงเริ่มเกมเท่านั้น
+
         [SerializeField, Tooltip("The minimum amount of straight tiles to spawn before another turn tile.")]
         private int minimumStraightTiles = 3;
+
         [SerializeField, Tooltip("The maximum amount of straight tiles to spawn before another turn tile.")]
         private int maximumStraightTiles = 15;
-        [SerializeField, Tooltip("The prefab representing a straight tile.")]
-        private GameObject[] startingTiles;                        // ⬅ เปลี่ยนเป็น Array
+
+        [SerializeField, Tooltip("The prefabs representing regular straight tiles (used after the initial path).")]
+        private GameObject[] startingTiles;              // ⬅ ใช้หลังจาก initial ชุดแรกไปแล้ว
+
         [SerializeField, Tooltip("A list of the prefabs representing turn tiles.")]
         private List<GameObject> turnTiles;
+
         [SerializeField, Tooltip("A list of the prefabs representing obstacles.")]
         private List<GameObject> obstacles;
 
@@ -44,11 +52,27 @@ namespace TempleRun
             // Initialize Unity's Random.
             Random.InitState(System.DateTime.Now.Millisecond);
 
-            // Spawn the initial straight tiles without an obstacle.
+            // --- INITIAL PATH ---
+            // ช่วงเริ่มเกมให้ใช้ prefab initialStartingTile ซ้ำไปก่อน
             for (int i = 0; i < tileStartCount; ++i)
             {
-                Tile straight = GetRandomStraightTile();           // ⬅ สุ่มจาก startingTiles
-                if (straight != null) { SpawnTile(straight); }
+                Tile straight = null;
+
+                if (initialStartingTile != null)
+                {
+                    straight = initialStartingTile.GetComponent<Tile>();
+                }
+                else
+                {
+                    // เผื่อกรณีลืมเซ็ต initialStartingTile ก็จะ fallback ไปใช้ random ปกติ
+                    straight = GetRandomStraightTile();
+                }
+
+                if (straight != null)
+                {
+                    // ไม่ให้ spawn obstacle ในช่วงเริ่มต้น
+                    SpawnTile(straight, false);
+                }
             }
 
             // Spawn the initial turn tile.
@@ -130,10 +154,12 @@ namespace TempleRun
             int currentPathLength = Random.Range(minimumStraightTiles, maximumStraightTiles);
             for (int i = 0; i < currentPathLength; ++i)
             {
-                Tile straight = GetRandomStraightTile();           // ⬅ ตรงนี้ก็สุ่มจาก startingTiles
+                // หลังจากนี้ใช้ straight จาก startingTiles[] เท่านั้น
+                Tile straight = GetRandomStraightTile();
                 if (straight != null)
                 {
-                    SpawnTile(straight, (i == 0) ? false : true);  // tile แรกหลังเลี้ยวไม่ spawn obstacle
+                    // tile แรกหลังเลี้ยวไม่ spawn obstacle
+                    SpawnTile(straight, (i == 0) ? false : true);
                 }
             }
 
@@ -179,5 +205,4 @@ namespace TempleRun
             return list[Random.Range(0, list.Count)];
         }
     }
-
 }

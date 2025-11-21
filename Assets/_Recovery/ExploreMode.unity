@@ -153,7 +153,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00023654442}
+  m_AnchoredPosition: {x: 0, y: 0.0003333801}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &15365709
@@ -1080,7 +1080,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 74679995}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9999866
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1667,7 +1667,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &281471811
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -6679,6 +6679,7 @@ MonoBehaviour:
     portrait: {fileID: 21300000, guid: 7267022887725cc4fa0c0fd2be05de12, type: 3}
     text: Ofcourseeeeeee Becuase you are here!
   npcQuestUI: {fileID: 882495443}
+  objectToActivateOnDialogueEnd: {fileID: 281471810}
 --- !u!61 &882495441
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -10019,6 +10020,7 @@ MonoBehaviour:
     portrait: {fileID: 21300000, guid: 3ad62ad333c8a3842afc088367d89548, type: 3}
     text: Just a tree
   npcQuestUI: {fileID: 0}
+  objectToActivateOnDialogueEnd: {fileID: 0}
 --- !u!50 &1201732871
 Rigidbody2D:
   serializedVersion: 5
