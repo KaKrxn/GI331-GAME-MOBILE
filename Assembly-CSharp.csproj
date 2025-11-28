@@ -73,6 +73,7 @@
     <Compile Include="Assets\BOXOPHOBIC\Utils\Scripts\StyledInspector\StyledButton.cs" />
     <Compile Include="Assets\BOXOPHOBIC\Utils\Scripts\StyledInspector\StyledCategory.cs" />
     <Compile Include="Assets\CoreScripts\UIs\LoadSceneOnInteract.cs" />
+    <Compile Include="Assets\AssestGames\Script\StartScreenEffects.cs" />
     <Compile Include="Assets\BOXOPHOBIC\Utils\Scripts\StyledInspector\StyledMessage.cs" />
     <Compile Include="Assets\CoreScripts\Obstacles\PooledForwardMover.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_ExampleScript_01.cs" />
