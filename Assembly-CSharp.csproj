@@ -1293,6 +1293,7 @@
     <ProjectReference Include="Unity.Rendering.LightTransport.Runtime.csproj" />
     <ProjectReference Include="Unity.ProBuilder.csproj" />
     <ProjectReference Include="UnityEngine.Advertisements.Editor.csproj" />
+    <ProjectReference Include="com.cqf.urpvolumetricfog.editor.csproj" />
     <ProjectReference Include="Unity.VisualScripting.State.csproj" />
     <ProjectReference Include="Unity.RenderPipelines.Universal.Config.Runtime.csproj" />
     <ProjectReference Include="Unity.RenderPipeline.Universal.ShaderLibrary.csproj" />
@@ -1302,6 +1303,7 @@
     <ProjectReference Include="Unity.RenderPipelines.Core.Editor.Shared.csproj" />
     <ProjectReference Include="Unity.InputSystem.csproj" />
     <ProjectReference Include="Unity.Splines.csproj" />
+    <ProjectReference Include="com.cqf.urpvolumetricfog.runtime.csproj" />
     <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="Unity.Services.Analytics.csproj" />
   </ItemGroup>

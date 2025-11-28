@@ -603,6 +603,7 @@ MonoBehaviour:
   startingTiles:
   - {fileID: 7270030239991754380, guid: 50a7756a8e2f0f14787d70ef66f51488, type: 3}
   - {fileID: 7270030239991754380, guid: 534590652c9a5c84b9fa387dbeb718af, type: 3}
+  - {fileID: 7270030239991754380, guid: 90d4c3685913101409833bda513e805a, type: 3}
   turnTiles:
   - {fileID: 3504972824814534260, guid: 57a0c77d40fb7f64f88c73e669bd75d0, type: 3}
   - {fileID: 3109650500946958552, guid: d1bc38dd49605864690bd11be3a4da2a, type: 3}

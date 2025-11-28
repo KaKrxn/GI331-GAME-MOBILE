@@ -2330,6 +2330,9 @@ MonoBehaviour:
   itemPrefabs:
   - {fileID: 2758273345513438555, guid: 6879f896c2ca00244ae2b44bb5615e2a, type: 3}
   - {fileID: 1492523591933421896, guid: 46048f9582c651846bd989c0ffed8bdd, type: 3}
+  - {fileID: 2758273345513438555, guid: 6972c4d223c78804989f7ceb81e44783, type: 3}
+  - {fileID: 2758273345513438555, guid: b67f5d5f3edfb86469cb9a041dbf53b8, type: 3}
+  - {fileID: 2758273345513438555, guid: 0bd85e6505e4cc547a6b274446a20d78, type: 3}
   itemChancePerTile: 0.012
   itemHeightOffset: 1
 --- !u!1 &7286279741996187792
