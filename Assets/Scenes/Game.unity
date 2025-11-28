@@ -346,9 +346,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileStartCount: 3
+  initialStartingTile: {fileID: 0}
   minimumStraightTiles: 3
   maximumStraightTiles: 15
-  startingTile: {fileID: 7270030239991754380, guid: 50a7756a8e2f0f14787d70ef66f51488, type: 3}
+  startingTiles: []
   turnTiles:
   - {fileID: 3504972824814534260, guid: 57a0c77d40fb7f64f88c73e669bd75d0, type: 3}
   - {fileID: 3109650500946958552, guid: d1bc38dd49605864690bd11be3a4da2a, type: 3}
@@ -1704,7 +1705,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2515,10 +2516,11 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 64
+  laneDistance: 1
+  maxLaneOffset: 1
   animator: {fileID: 951309126}
   slideAnimationClip: {fileID: 7400000, guid: 4e69023cbe0d61042a50e28e2f6868d5, type: 2}
   scoreMultiplier: 10
-  mesh: {fileID: 0}
   turnEvent:
     m_PersistentCalls:
       m_Calls:
@@ -2589,9 +2591,9 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   playerSpeed: 0
-  laneDistance: 1
-  maxLaneOffset: 1
-  maxTurnDistance: 0.75
+  enableSwipe: 1
+  minSwipeDistance: 50
+  maxSwipeTime: 0.5
 --- !u!143 &1513863023
 CharacterController:
   m_ObjectHideFlags: 0
@@ -2727,7 +2729,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -3440,6 +3443,8 @@ MonoBehaviour:
   scoreText: {fileID: 91784451}
   leaderboardScoreText: {fileID: 888457163}
   leaderboardNameText: {fileID: 1218599115}
+  playagiansceneName: 
+  sceneName: 
 --- !u!4 &2028075618
 Transform:
   m_ObjectHideFlags: 0

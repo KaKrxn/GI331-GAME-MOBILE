@@ -153,6 +153,7 @@ MonoBehaviour:
   - {fileID: 4296845917510203146, guid: 16de76ad131f94449abe9d08342a2e07, type: 3}
   - {fileID: 8287155024953990744, guid: 9fbbd82c327225e439dba70d082f5235, type: 3}
   - {fileID: 693237429605523602, guid: 9c25da9883f1d1248b09dccc45373456, type: 3}
+  tileSpawnWeights: []
   tileLength: 15
   tilesAhead: 80
   safeStartCount: 3
@@ -171,6 +172,9 @@ MonoBehaviour:
   cellSize: 10
   forwardCellsPerTile: 1
   maxSpawnsPerFrame: 1
+  useFiniteTrack: 0
+  maxRegularTiles: 50
+  endTilePrefab: {fileID: 0}
 --- !u!4 &140110842
 Transform:
   m_ObjectHideFlags: 0
@@ -365,7 +369,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -607,7 +612,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
