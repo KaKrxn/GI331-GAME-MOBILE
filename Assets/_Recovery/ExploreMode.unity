@@ -61889,7 +61889,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3bc744bb5a6f5043a0941a5064d1fd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoadSceneOnInteract
-  sceneName: 
+  sceneName: Level_End
   interactUI: {fileID: 1062219021}
 --- !u!114 &1862567448
 MonoBehaviour:
@@ -61903,7 +61903,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5acfb071dc4efeb47848cfbbf63deb88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScenePortalInteractable
-  sceneName: 
+  sceneName: Level_End
 --- !u!70 &1862567449
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
